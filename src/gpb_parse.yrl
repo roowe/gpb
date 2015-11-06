@@ -771,10 +771,10 @@ reformat_rpcs(RPCs) ->
 %% `Defs' is expected to be verified, to not extend missing messages
 extend_msgs(Defs, Packages) ->
     lists:foldl(fun(Def, Acc) ->
-                    case is_extended(Def, Defs) of
-                        true  -> Acc;
-                        false -> possibly_extend_msg(Def, Acc, Packages)
-                    end
+                        case is_extended(Def, Defs) of
+                            true  -> Acc;
+                            false -> possibly_extend_msg(Def, Acc, Packages)
+                        end
                 end,
                 Defs,
                 Defs).
@@ -791,7 +791,6 @@ possibly_extend_msg({{extend,Msg}, MoreFields} = Extend, Defs, Packages) ->
         false ->
             repackage_extended_msg(Extend, Defs, Packages)
     end;
-
 possibly_extend_msg(_OtherElem, Defs, _Packages) ->
     Defs.
 
@@ -803,16 +802,15 @@ repackage_extended_msg({{extend,OrigMsg}, MoreFields}, Defs, Packages) ->
 
 %% keeps stripping found packages from the Msg name until it can no longer do
 %% so, then adds back the last one it took off. All the others were incorrectly
-%% added during a previous post_process_one_file run. That run doens't know
+%% added during a previous post_process_one_file run. That run doesn't know
 %% about any other packages yet, so is unable to know whether to add them or
 %% not, meaning it always adds them. Here we take them off again.
 fix_last_package(Msg, Packages) ->
     fix_last_package(Msg, Packages, [], dropped_none, []).
 
 fix_last_package(Msg, [], DonePackages, Dropped, LastDropped)
-    when DonePackages =:= []; Dropped =:= dropped_none ->
+  when DonePackages =:= []; Dropped =:= dropped_none ->
     LastDropped ++ Msg;
-
 fix_last_package(Msg, [], DonePackages, dropped_one, LastPackage) ->
     fix_last_package(Msg, DonePackages, [], dropped_none, LastPackage);
 fix_last_package(Msg, [H|T], DonePackages, Dropped, LastPackage) ->
