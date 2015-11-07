@@ -389,6 +389,26 @@ parses_extensions_of_msg_in_other_package_test() ->
                    occurrence=required}]}] =
         do_process_sort_multiple_defs([Defs1, Defs2], []).
 
+parses_multiple_extensions_test() ->
+    {ok,Defs} = parse_lines(["message m1 {",
+                             "  required uint32 f1=1 [default=17];",
+                             "  extensions 200 to 299;",
+                             "}",
+                             "extend m1 {",
+                             "  optional uint32 f2=2;",
+                             "}",
+                             "extend m1 {",
+                             "  repeated uint32 f3=3;",
+                             "}"]),
+    [{{extensions,m1},[{200,299}]},
+     {{msg,m1},       [#?gpb_field{name=f1, fnum=1, rnum=2, opts=[{default,17}],
+                                   occurrence=required},
+                       #?gpb_field{name=f2, fnum=2, rnum=3, opts=[],
+                                   occurrence=optional},
+                       #?gpb_field{name=f3, fnum=3, rnum=4, opts=[],
+                                   occurrence=repeated}]}] =
+        do_process_sort_defs(Defs).
+
 parses_service_test() ->
     {ok,Defs} = parse_lines(["message m1 {required uint32 f1=1;}",
                              "message m2 {required uint32 f2=1;}",
