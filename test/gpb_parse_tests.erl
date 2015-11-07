@@ -371,6 +371,24 @@ parses_extending_msgs_test() ->
                                    occurrence=optional}]}] =
         do_process_sort_defs(Defs).
 
+parses_extensions_of_msg_in_other_package_test() ->
+    {ok,Defs1} = parse_lines(["package base;",
+                              "message b1 {",
+                              "  required uint32 f1=1 [default=17];",
+                              "}"]),
+    {ok,Defs2} = parse_lines(["package extending;",
+                              "//import base.proto", % done implicitly
+                              "extend base.b1 {",
+                              "   required uint32 f2=2;",
+                              "}"]),
+    [{{extensions,'base.b1'},[{200,299}]},
+     {{msg,'base.b1'},
+      [#?gpb_field{name=f1, fnum=1, rnum=2, opts=[{default,17}],
+                   occurrence=required},
+       #?gpb_field{name=f2, fnum=2, rnum=3, opts=[],
+                   occurrence=required}]}] =
+        do_process_sort_multiple_defs([Defs1, Defs2], []).
+
 parses_service_test() ->
     {ok,Defs} = parse_lines(["message m1 {required uint32 f1=1;}",
                              "message m2 {required uint32 f2=1;}",
@@ -669,4 +687,16 @@ do_process_sort_defs(Defs, Opts) ->
 post_process(Elems, Opts) ->
     {ok, Elems2} = gpb_parse:post_process_one_file(Elems, Opts),
     gpb_parse:post_process_all_files(Elems2, Opts).
+
+do_process_sort_multiple_defs(ListOfDefs, Opts) ->
+    AllDefs =
+        lists:foldl(
+          fun(Elems, Acc) ->
+                  {ok, Elems2} = gpb_parse:post_process_one_file(Elems, Opts),
+                  Acc ++ Elems2
+          end,
+          [],
+          ListOfDefs),
+    AllDefs2 = gpb_parse:post_process_all_files(AllDefs, Opts),
+    lists:sort(AllDefs2).
 
